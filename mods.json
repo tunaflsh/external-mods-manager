@@ -3,11 +3,7 @@
     "mods": [
         {
             "name": "SeedcrackerX",
-            "version": "1.20.x",
-            "sources": [
-                "https://github.com/19MisterX98/SeedcrackerX"
-            ],
-            "file": "seedcrackerX-2.14.4.jar"
+            "source": "https://github.com/19MisterX98/SeedcrackerX"
         }
     ]
 }
