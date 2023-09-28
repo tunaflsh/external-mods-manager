@@ -38,24 +38,19 @@ def main():
     )
 
     extractors = [
-        extractor_factory(mod["name"], version, source, mod.get("file"))
+        extractor_factory(mod["name"], version, mod["source"], mod.get("file"))
         for mod in mods
-        for source in mod["sources"]
     ]
-
-    for extractor in extractors:
-        extractor.download_jar()
 
     mods = {}
     for extractor in extractors:
-        if extractor.name not in mods:
-            mods[extractor.name] = {
-                "name": extractor.name,
-                "version": extractor.version,
-                "sources": [],
-                "file": extractor.file,
-            }
-        mods[extractor.name]["sources"].append(extractor.source)
+        mods[extractor.name] = {
+            "name": extractor.name,
+            "source": extractor.source,
+        }
+        if extractor.download_jar():
+            mods[extractor.name]["version"] = extractor.version
+            mods[extractor.name]["file"] = extractor.file
 
     modlist["mods"] = list(mods.values())
     json.dump(modlist, open(MODSJSON, "w"), indent=4)

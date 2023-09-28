@@ -1,0 +1,42 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/tunaflsh/external-mods-manager/blob/master/mods.schema.json",
+    "title": "Mods",
+    "description": "A list of mods to be installed or updated",
+    "type": "object",
+    "properties": {
+        "version": {
+            "description": "The Minecraft version to install mods for",
+            "type": "string"
+        },
+        "mods": {
+            "description": "A list of mods to be installed or updated",
+            "type": "array",
+            "items": {
+                "description": "A mod to be installed or updated",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "The name of the mod",
+                        "type": "string"
+                    },
+                    "source": {
+                        "description": "The download source of the mod",
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "version": {
+                        "description": "The Minecraft version the mod supports",
+                        "type": "string"
+                    },
+                    "file": {
+                        "description": "The filename of the mod",
+                        "type": "string"
+                    }
+                },
+                "required": ["name", "source"]
+            }
+        }
+    },
+    "required": ["version", "mods"]
+}

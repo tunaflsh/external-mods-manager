@@ -1,13 +1,41 @@
 {
-    "version": "1.20.1",
+    "version": "1.20.2",
     "mods": [
         {
             "name": "SeedcrackerX",
+            "source": "https://github.com/19MisterX98/SeedcrackerX",
             "version": "1.20.x",
-            "sources": [
-                "https://github.com/19MisterX98/SeedcrackerX"
-            ],
             "file": "seedcrackerX-2.14.4.jar"
+        },
+        {
+            "name": "Nyan-Work/malilib",
+            "source": "https://github.com/Nyan-Work/malilib",
+            "version": "1.20.2",
+            "file": "malilib-fabric-1.20.2-0.16.2-nyan.6.jar"
+        },
+        {
+            "name": "Nyan-Work/tweakeroo",
+            "source": "https://github.com/Nyan-Work/tweakeroo",
+            "version": "1.20.2",
+            "file": "tweakeroo-fabric-1.20.2-0.17.1-nyan.6.jar"
+        },
+        {
+            "name": "Nyan-Work/minihud",
+            "source": "https://github.com/Nyan-Work/minihud",
+            "version": "1.20.2",
+            "file": "minihud-fabric-1.20.2-0.27.0-nyan.6.jar"
+        },
+        {
+            "name": "Nyan-Work/litematica",
+            "source": "https://github.com/Nyan-Work/litematica",
+            "version": "1.20.2",
+            "file": "litematica-fabric-1.20.2-0.15.3-nyan.6.jar"
+        },
+        {
+            "name": "Nyan-Work/itemscroller",
+            "source": "https://github.com/Nyan-Work/itemscroller",
+            "version": "1.20.2",
+            "file": "itemscroller-fabric-1.20.2-0.20.0-nyan.6.jar"
         }
     ]
 }
