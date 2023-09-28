@@ -15,6 +15,9 @@ from logging_config import logging_config
 
 MODSJSON = "mods.json"
 
+SESSION = requests.Session()
+SESSION.headers.update({"User-Agent": "tunaflsh/external-mods-manager"})
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -70,10 +73,14 @@ def extractor_factory(
     if name == "SeedcrackerX":
         return SeedcrackerXExtractor(version, source, file)
     else:
-        raise NotImplementedError(f"Extractor for {name} not implemented")
+        return GithubReleasesExtractor(name, version, source, file)
 
 
 class ModExtractor:
+    GITHUB_REGEX = re.compile(
+        r"^(https?://)?github.com/(?P<owner>.+?)/(?P<repo>.+?)(\.git)?$"
+    )
+
     def __init__(self, name: str, version: str, source: str, file: str = None):
         self.name = name
         self.version = version
@@ -84,22 +91,53 @@ class ModExtractor:
     def __repr__(self) -> str:
         return self.name
 
-    def extract_jar(self) -> dict[str, str]:
-        return {"version": None, "url": None}
+    def extract_jars(self, response: requests.Response) -> dict[str, str]:
+        return None
+
+    def find_matching_version(self, mod_list: dict[str, str]) -> str:
+        # try to find the exact VERSION a.b.c then a.b.x then a.b
+        if self.version in mod_list:
+            self.logger.debug(f"Exact version found: {self.version}")
+            return self.version
+
+        a, b, c = self.version.split(".")
+        versions = [
+            version for version in mod_list if re.search(rf"(^|\D){a}\.{b}\.", version)
+        ]
+        if len(versions) > 1:
+            self.logger.error(f"More than one version found: {versions}")
+            return None
+
+        if versions:
+            self.logger.warning(f"No exact version found. Using: {versions[0]}")
+            return versions[0]
+
+        if f"{a}.{b}" in mod_list:
+            self.logger.warning(f"No exact version found. Using: {a}.{b}")
+            return f"{a}.{b}"
+
+        self.logger.error(f"No matching version found")
+        return None
 
     def download_jar(self) -> bool:
         """
         Returns:
-            bool: True if the file was updated, False otherwise.
+            bool: True if the file was downloaded or up-to-date
         """
-        jar = self.extract_jar()
-        if not jar:
+        jars = self.extract_jars()
+        if not jars:
+            self.logger.error(f"Failed to extract jars")
             return False
 
-        self.version = jar["version"]
-        jar_url = jar["url"]
+        version = self.find_matching_version(jars)
+        if not version:
+            self.logger.error(f"Failed to find matching version")
+            return False
 
-        response = requests.head(jar_url, allow_redirects=True)
+        self.version = version
+        jar_url = jars[self.version]
+
+        response = SESSION.head(jar_url, allow_redirects=True)
         if response.status_code != 200:
             self.logger.error(
                 f"Filename Header: Status Code {response.status_code} from {jar_url}"
@@ -120,11 +158,11 @@ class ModExtractor:
 
         if os.path.exists(file):
             self.logger.info(f"Already up to date")
-            return False
+            return True
 
         self.logger.info(f"Downloading")
 
-        response = requests.get(jar_url, stream=True)
+        response = SESSION.get(jar_url, stream=True)
         if response.status_code != 200:
             self.logger.error(
                 f"Download: Status Code {response.status_code} from {jar_url}"
@@ -161,18 +199,17 @@ class SeedcrackerXExtractor(ModExtractor):
     ):
         super().__init__(name, version, source, file)
 
-    def extract_jar(self) -> dict[str, str]:
-        repo = self.source.split("github.com/")[1]
-        readme = f"https://raw.githubusercontent.com/{repo}/master/README.md"
-        releases = self.source + "/releases"
+    def extract_jars(self) -> dict[str, str]:
+        owner, repo = self.GITHUB_REGEX.match(self.source).group("owner", "repo")
+        readme = f"https://raw.githubusercontent.com/{owner}/{repo}/master/README.md"
 
         # download readme file from the github url
-        response = requests.get(readme)
+        response = SESSION.get(readme)
         if response.status_code != 200:
             self.logger.error(
                 f"Download: Status code {response.status_code} from {readme}"
             )
-            return
+            return None
 
         # extract the Version Tab table
         version_tab = re.search(
@@ -180,38 +217,71 @@ class SeedcrackerXExtractor(ModExtractor):
         )
         if not version_tab:
             self.logger.error(f"Version Tab not found in README.md")
-            return
+            return None
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(f"version_tab:\n{version_tab[1]}")
 
         mod_list = {
-            mc_version: jar_url
-            for mc_version, mod_version, jar_url in re.findall(
-                r"\| +(.+?) +\| +\[(.+?)\]\((.+?)\)", version_tab.group(1)
+            match["mc_version"]: match["jar_url"]
+            for match in re.finditer(
+                r"\| +(?P<mc_version>[a-z0-9._-]+?) +\| +\[(?P<mod_version>[0-9.]+?)\]\((?P<jar_url>\S+?)\) +\|",
+                version_tab[1],
             )
         }
 
-        # try to find the exact VERSION a.b.c then a.b.x then a.b
-        if self.version in mod_list:
-            self.logger.debug(f"Exact version found: {self.version}")
-            return {"version": self.version, "url": mod_list[self.version]}
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(f"mod_list:\n{json.dumps(mod_list, indent=4)}")
 
-        a, b, c = self.version.split(".")
-        versions = [
-            version for version in mod_list if re.search(rf"(^|\D){a}\.{b}\.", version)
-        ]
-        if len(versions) > 1:
-            self.logger.error(f"More than one version found: {versions}")
-            return
+        return mod_list
 
-        if versions:
-            self.logger.warning(f"No exact version found. Using: {versions[0]}")
-            return {"version": versions[0], "url": mod_list[versions[0]]}
 
-        if f"{a}.{b}" in mod_list:
-            self.logger.warning(f"No exact version found. Using: {a}.{b}")
-            return {"version": f"{a}.{b}", "url": mod_list[f"{a}.{b}"]}
+class GithubReleasesExtractor(ModExtractor):
+    """
+    Extracts Nyan Work mods from the github repo.
+    """
 
-        self.logger.error(f"No matching version found")
-        return
+    VERSION_REGEX = re.compile(
+        r"^(?P<mod_name>.+?)-(?P<game_version>\d+\.\d+(?:\.\d+)?(?:-pre\w+|-rc\w+)?|\d{2}w\d{2}\w+)-(?P<mod_version>.+?)\.jar$"
+    )
+
+    def __init__(self, name: str, version: str, source: str, file: str = None):
+        super().__init__(name, version, source, file)
+
+    def extract_jars(self) -> dict[str, str]:
+        owner, repo = self.GITHUB_REGEX.match(self.source).group("owner", "repo")
+        releases_url = f"https://api.github.com/repos/{owner}/{repo}/releases"
+
+        # download releases page from the github url
+        response = SESSION.get(releases_url)
+        if response.status_code != 200:
+            self.logger.error(
+                f"Download: Status code {response.status_code} from {releases_url}"
+            )
+            return None
+
+        releases = response.json()
+        if not releases:
+            self.logger.error(f"No releases found")
+            return None
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(
+                f"mod_list:\n{json.dumps({asset['name']: asset['browser_download_url'] for release in releases for asset in release['assets']}, indent=4)}"
+            )
+
+        mod_list = {
+            self.VERSION_REGEX.match(asset["name"])["game_version"]: asset[
+                "browser_download_url"
+            ]
+            for release in releases
+            for asset in release["assets"]
+        }
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(f"mod_list:\n{json.dumps(mod_list, indent=4)}")
+
+        return mod_list
 
 
 if __name__ == "__main__":
