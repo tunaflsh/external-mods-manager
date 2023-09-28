@@ -1,5 +1,6 @@
 # Mods
 *.jar
+mods.json
 
 # Python
 *.pyc
