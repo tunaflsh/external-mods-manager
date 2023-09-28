@@ -1,0 +1,15 @@
+{
+    "version": "1.20.1",
+    "mods": [
+        {
+            "name": "SeedcrackerX",
+            "source": "https://github.com/19MisterX98/SeedcrackerX",
+            "version": "1.20.x",
+            "file": "seedcrackerX-2.14.4.jar"
+        },
+        {
+            "name": "Nyan-Work/malilib",
+            "source": "https://github.com/Nyan-Work/malilib"
+        }
+    ]
+}
