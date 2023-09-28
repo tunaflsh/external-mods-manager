@@ -1,29 +1,29 @@
 import logging
 
 
-def logging_config(level: str = "INFO") -> dict:
+def logging_config(debug: list[str] = None) -> dict:
     return {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
             "debug": {
-                "format": "\033[34m{levelname:8}\033[0;2m{name:>20s}.{funcName:20}\033[0;34m{message}\033[0m",
+                "format": "\033[34m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;34m{message}\033[0m",
                 "style": "{",
             },
             "info": {
-                "format": "{levelname:8}\033[2m{name:>20s}.{funcName:20}\033[0m{message}",
+                "format": "{levelname:8}\033[2m{name:>25s}.{funcName:30}\033[0m{message}",
                 "style": "{",
             },
             "warning": {
-                "format": "\033[33m{levelname:8}\033[0;2m{name:>20s}.{funcName:20}\033[0;33m{message}\033[0m",
+                "format": "\033[33m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;33m{message}\033[0m",
                 "style": "{",
             },
             "error": {
-                "format": "\033[31m{levelname:8}\033[0;2m{name:>20s}.{funcName:20}\033[0;31m{message}\033[0m",
+                "format": "\033[31m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;31m{message}\033[0m",
                 "style": "{",
             },
             "critical": {
-                "format": "\033[35m{levelname:8}\033[0;2m{name:>20s}.{funcName:20}\033[0;35m{message}\033[0m",
+                "format": "\033[35m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;35m{message}\033[0m",
                 "style": "{",
             },
         },
@@ -75,8 +75,16 @@ def logging_config(level: str = "INFO") -> dict:
         "loggers": {
             "": {
                 "handlers": ["debug", "info", "warning", "error", "critical"],
-                "level": level,
-                "propagate": "no",
+                "level": "DEBUG" if debug == [""] else "INFO",
+                "propagate": False,
             },
+            **{
+                name: {
+                    "handlers": ["debug", "info", "warning", "error", "critical"],
+                    "level": "DEBUG",
+                    "propagate": False,
+                }
+                for name in debug if name
+            }
         },
     }

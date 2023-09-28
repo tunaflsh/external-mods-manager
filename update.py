@@ -19,11 +19,17 @@ MODSJSON = "mods.json"
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-d", "--debug", help="Enable debug logging", action="store_true"
+        "-d",
+        "--debug",
+        nargs="?",
+        const="",
+        default=[],
+        action="append",
+        help="Enable debug logging",
     )
     args = parser.parse_args()
 
-    logging.config.dictConfig(logging_config("DEBUG" if args.debug else "INFO"))
+    logging.config.dictConfig(logging_config(args.debug))
 
     logger = logging.getLogger()
 
