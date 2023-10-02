@@ -95,10 +95,19 @@ class ModExtractor:
         return None
 
     def find_matching_version(self, mod_list: dict[str, str]) -> str:
-        # try to find the exact VERSION a.b.c then a.b.x then a.b
-        if self.version in mod_list:
-            self.logger.debug(f"Exact version found: {self.version}")
-            return self.version
+        # try to find the exact VERSION a.b.c then a.b.* then a.b
+        versions = [
+            version
+            for version in mod_list
+            if re.search(rf"(^|\D){self.version}($|\D)$", version)
+        ]
+        if len(versions) > 1:
+            self.logger.error(f"More than one version found: {versions}")
+            return None
+
+        if versions:
+            self.logger.debug(f"Exact version found: {versions[0]}")
+            return versions[0]
 
         a, b, c = self.version.split(".")
         versions = [
@@ -225,7 +234,7 @@ class SeedcrackerXExtractor(ModExtractor):
         mod_list = {
             match["mc_version"]: match["jar_url"]
             for match in re.finditer(
-                r"\| +(?P<mc_version>[a-z0-9._-]+?) +\| +\[(?P<mod_version>[0-9.]+?)\]\((?P<jar_url>\S+?)\) +\|",
+                r"\| +(?P<mc_version>[a-z0-9._-]+?\D?) +\| +\[(?P<mod_version>[0-9.]+?)\]\((?P<jar_url>\S+?)\) +\|",
                 version_tab[1],
             )
         }
