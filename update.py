@@ -28,7 +28,7 @@ def main():
         const="",
         default=[],
         action="append",
-        help="Enable debug logging",
+        help="Enable debug logging. Optionally specify a module (shown in magenta) to only enable debug logging for that module (e.g. -d Nyan-Work/itemscroller)",
     )
     args = parser.parse_args()
 

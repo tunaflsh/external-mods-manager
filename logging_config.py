@@ -7,23 +7,23 @@ def logging_config(debug: list[str] = None) -> dict:
         "disable_existing_loggers": False,
         "formatters": {
             "debug": {
-                "format": "\033[34m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;34m{message}\033[0m",
+                "format": "\033[34m{levelname:8}\033[0;35m{name:>25s}\033[0;2m.{funcName:30}\033[0;34m{message}\033[0m",
                 "style": "{",
             },
             "info": {
-                "format": "{levelname:8}\033[2m{name:>25s}.{funcName:30}\033[0m{message}",
+                "format": "{levelname:8}\033[35m{name:>25s}\033[0;2m.{funcName:30}\033[0m{message}",
                 "style": "{",
             },
             "warning": {
-                "format": "\033[33m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;33m{message}\033[0m",
+                "format": "\033[33m{levelname:8}\033[0;35m{name:>25s}\033[0;2m.{funcName:30}\033[0;33m{message}\033[0m",
                 "style": "{",
             },
             "error": {
-                "format": "\033[31m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;31m{message}\033[0m",
+                "format": "\033[31m{levelname:8}\033[0;35m{name:>25s}\033[0;2m.{funcName:30}\033[0;31m{message}\033[0m",
                 "style": "{",
             },
             "critical": {
-                "format": "\033[35m{levelname:8}\033[0;2m{name:>25s}.{funcName:30}\033[0;35m{message}\033[0m",
+                "format": "\033[35m{levelname:8}\033[0;35m{name:>25s}\033[0;2m.{funcName:30}\033[0;35m{message}\033[0m",
                 "style": "{",
             },
         },
