@@ -38,17 +38,32 @@ def main():
 
     modlist = json.load(open(MODSJSON, "r"))
     version = modlist["version"]
-    mods = modlist["mods"]
+
+    disabled_mods = [
+        mod for mod in modlist["mods"] if mod.get("disabled") and mod.get("file")
+    ]
+    enabled_mods = [mod for mod in modlist["mods"] if not mod.get("disabled")]
 
     logger.info(
         "Updating %s for Minecraft %s",
-        f"{len(mods)} mods" if len(mods) > 1 else "1 mod",
+        f"{len(enabled_mods)} mods" if len(enabled_mods) > 1 else "1 mod",
         version,
     )
 
+    if disabled_mods:
+        logger.info(
+            "Removing %s",
+            f"{len(disabled_mods)} mods" if len(disabled_mods) > 1 else "1 mod",
+        )
+        for mod in disabled_mods:
+            file = mod["file"]
+            if os.path.exists(file):
+                os.remove(file)
+            del mod["file"]
+
     extractors = [
         extractor_factory(mod["name"], version, mod["source"], mod.get("file"))
-        for mod in mods
+        for mod in enabled_mods
     ]
 
     mods = {}
@@ -61,7 +76,7 @@ def main():
             mods[extractor.name]["version"] = extractor.version
             mods[extractor.name]["file"] = extractor.file
 
-    modlist["mods"] = list(mods.values())
+    modlist["mods"] = list(mods.values()) + disabled_mods
     json.dump(modlist, open(MODSJSON, "w"), indent=4)
 
     logger.info("Done!")
