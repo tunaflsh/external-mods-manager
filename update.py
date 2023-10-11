@@ -39,9 +39,8 @@ def main():
     modlist = json.load(open(MODSJSON, "r"))
     version = modlist["version"]
 
-    disabled_mods = [
-        mod for mod in modlist["mods"] if mod.get("disabled") and mod.get("file")
-    ]
+    disabled_mods = [mod for mod in modlist["mods"] if mod.get("disabled")]
+    removing_mods = [mod for mod in disabled_mods if mod.get("file")]
     enabled_mods = [mod for mod in modlist["mods"] if not mod.get("disabled")]
 
     logger.info(
@@ -50,15 +49,14 @@ def main():
         version,
     )
 
-    if disabled_mods:
+    if removing_mods:
         logger.info(
             "Removing %s",
-            f"{len(disabled_mods)} mods" if len(disabled_mods) > 1 else "1 mod",
+            f"{len(removing_mods)} mods" if len(removing_mods) > 1 else "1 mod",
         )
-        for mod in disabled_mods:
-            file = mod["file"]
-            if os.path.exists(file):
-                os.remove(file)
+        for mod in removing_mods:
+            if os.path.exists(mod["file"]):
+                os.remove(mod["file"])
             del mod["file"]
 
     extractors = [
