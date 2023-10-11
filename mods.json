@@ -10,6 +10,11 @@
         {
             "name": "Nyan-Work/malilib",
             "source": "https://github.com/Nyan-Work/malilib"
+        },
+        {
+            "name": "Nyan-Work/tweakeroo",
+            "source": "https://github.com/Nyan-Work/tweakeroo",
+            "disabled": true
         }
     ]
 }
